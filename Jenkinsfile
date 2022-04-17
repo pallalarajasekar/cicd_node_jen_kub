@@ -1,0 +1,38 @@
+pipeline{  
+  environment {
+    registry = "harinathsta1/nodejshelloworld"
+    registryCredential = '660e2ab9-c41f-4473-a200-8aac9ff23ce0'
+    dockerImage = ''
+  }
+  agent any
+    stages {
+        stage('Build'){
+           steps{
+              script{
+                sh 'npm install'
+              } 
+           }   
+        }
+        stage('Building image') {
+            steps{
+                script {
+                  dockerImage = docker.build registry + ":latest"
+                 }
+             }
+          }
+          stage('Push Image') {
+              steps{
+                  script {
+                       docker.withRegistry( '', registryCredential){                            
+                       dockerImage.push()
+                      }
+                   }
+                } 
+           }
+           stage('Deploying into k8s'){
+            steps{
+                sh 'kubectl apply -f deployment.yml' 
+            }
+        }
+    }
+}
